@@ -1,8 +1,8 @@
-# 🚀 The Franken-Cluster: Multi-OS Mobile K3s
+# Franken-Cluster: Multi-OS Mobile K3s
 
 This repository automates the creation of a hybrid Kubernetes cluster spanning a **Raspberry Pi 4**, a **macOS machine (via Colima)**, and an **Ubuntu PC**. By leveraging **Tailscale**, the cluster remains connected securely even if the nodes move between different Wi-Fi networks (home, cafe, or transit).
 
-## 🛠️ Key Features
+## Key Features
 * **Infrastructure as Code:** Powered by Terraform with Google Cloud Storage (GCS) for remote state management.
 * **Hardware-Aware:** Custom resource reservations (6GB for Mac, 3GB for Ubuntu) to prevent OS crashes.
 * **Zero-Config Networking:** Tailscale mesh allows nodes to find each other regardless of local IP changes.
@@ -10,7 +10,7 @@ This repository automates the creation of a hybrid Kubernetes cluster spanning a
 
 ---
 
-## 🏃 How to Run (4 Simple Steps)
+## How to Run
 
 Before starting, ensure your `.env` file is populated with your Tailscale API keys, Google Cloud credentials, and K3s tokens.
 
