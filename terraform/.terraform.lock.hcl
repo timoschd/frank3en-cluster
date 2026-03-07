@@ -1,0 +1,43 @@
+# This file is maintained automatically by "terraform init".
+# Manual edits may be lost in future updates.
+
+provider "registry.terraform.io/hashicorp/null" {
+  version = "3.2.4"
+  hashes = [
+    "h1:hkf5w5B6q8e2A42ND2CjAvgvSN3puAosDmOJb3zCVQM=",
+    "zh:59f6b52ab4ff35739647f9509ee6d93d7c032985d9f8c6237d1f8a59471bbbe2",
+    "zh:78d5eefdd9e494defcb3c68d282b8f96630502cac21d1ea161f53cfe9bb483b3",
+    "zh:795c897119ff082133150121d39ff26cb5f89a730a2c8c26f3a9c1abf81a9c43",
+    "zh:7b9c7b16f118fbc2b05a983817b8ce2f86df125857966ad356353baf4bff5c0a",
+    "zh:85e33ab43e0e1726e5f97a874b8e24820b6565ff8076523cc2922ba671492991",
+    "zh:9d32ac3619cfc93eb3c4f423492a8e0f79db05fec58e449dee9b2d5873d5f69f",
+    "zh:9e15c3c9dd8e0d1e3731841d44c34571b6c97f5b95e8296a45318b94e5287a6e",
+    "zh:b4c2ab35d1b7696c30b64bf2c0f3a62329107bd1a9121ce70683dec58af19615",
+    "zh:c43723e8cc65bcdf5e0c92581dcbbdcbdcf18b8d2037406a5f2033b1e22de442",
+    "zh:ceb5495d9c31bfb299d246ab333f08c7fb0d67a4f82681fbf47f2a21c3e11ab5",
+    "zh:e171026b3659305c558d9804062762d168f50ba02b88b231d20ec99578a6233f",
+    "zh:ed0fe2acdb61330b01841fa790be00ec6beaac91d41f311fb8254f74eb6a711f",
+  ]
+}
+
+provider "registry.terraform.io/tailscale/tailscale" {
+  version     = "0.13.13"
+  constraints = "~> 0.13.0"
+  hashes = [
+    "h1:Fh799APNn48Jj2D29gcHh+HwLcA7wfAVIfMdkWyMoWw=",
+    "zh:07ee590ab8b568d65d52b401d15639ab0c23bda05e7b90f445a4159d7f9cecf8",
+    "zh:1bf72d550904475fbfc211295277d6afe0f3d0c98b89db7f718e2182febb0cd0",
+    "zh:26ef6e6f3a42cf5783d7aa5e1774b2fb86e0b01742349d4a5dee1164015163d9",
+    "zh:29c28fb821f6910cec4df54215b7338e180e44c0218ad16c63a0a8ecbb6307ab",
+    "zh:337d7548b8aeeeb7d6cd874601b237bb1db149c642fec416f2cb93513ac37070",
+    "zh:529f4fb1f54b3091ba32319ea766bfb7d49b7fb113d71bc89703155d8a1d5bdc",
+    "zh:541fafbe0124ceda9cf619d8248f6c1e7d5a45210604356f7896d447666f06ab",
+    "zh:5e1a66df1b891780a8aef54522ef1017952ca4f25103633d51b81bbe4b56b56a",
+    "zh:acdd72771d4cc7bb5465ea5d3eed56d86ee2b0b83b74549e8cd6dc4153222ef7",
+    "zh:beedd644c2db69829ec3850cd1aa3953c8c822820df16d97cf0c5b4891c03a2d",
+    "zh:c17fe2e6fe06f104d5150278500419f471d5d3b061dcd5673a6f6c915cc1cec0",
+    "zh:cc5805ae3f7f2495f7cf81655227fb68e18fc02d7fcc16896b57758a0f8611ae",
+    "zh:f18db5c7bf6707a5d358243a7dddfc69adf9b39ba0630206af5da6d89813b205",
+    "zh:f88f5b1e4c015b20a1bdf696df94f57bdfa69171ac0de149a586f89b17166010",
+  ]
+}

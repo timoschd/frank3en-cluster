@@ -1,0 +1,36 @@
+# --- Terraform ---
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+_override.tf
+_override.tf.json
+.terraformrc
+terraform.rc
+
+# --- Secrets & Config ---
+.env
+.envrc
+secrets.sh
+*.json
+!terraform.required_providers.json # Keep provider locks if needed
+
+# --- SSH Keys (Safety first) ---
+id_rsa
+id_ed25519
+*.pem
+*.pub
+
+# --- OS / IDE Specific ---
+.DS_Store
+.idea/
+.vscode/
+node_modules/
+dist/
+build/
+*.log
