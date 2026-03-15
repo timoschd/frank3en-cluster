@@ -20,22 +20,41 @@ resource "tailscale_tailnet_key" "k3s_key" {
   tags          = ["tag:k3s"]
 }
 
+locals {
+  active_nodes = {
+    for name, node in var.nodes : name => node
+    if !(var.exclude_windows_worker && name == "windows-worker")
+  }
+
+  remote_nodes = {
+    for name, node in local.active_nodes : name => node
+    if node.bootstrap_mode == "ssh"
+  }
+
+  local_nodes = {
+    for name, node in local.active_nodes : name => node
+    if node.bootstrap_mode == "local"
+  }
+}
+
 # --- 3. Node Information (Phase 2) ---
 data "tailscale_device" "node" {
-  for_each = var.use_tailscale ? var.nodes : {}
+  for_each = var.use_tailscale ? local.active_nodes : {}
   name     = "${each.key}.${var.tailnet_name}"
 }
 
 # --- 4. The Cluster Installation ---
-resource "null_resource" "k3s_setup" {
-  for_each   = var.nodes
+resource "null_resource" "k3s_setup_remote" {
+  for_each   = local.remote_nodes
   depends_on = [null_resource.mac_hardware_config]
 
   connection {
     type        = "ssh"
-    user        = var.ssh_user
-    private_key = file(var.ssh_key_path)
-    host        = var.use_tailscale ? data.tailscale_device.node[each.key].addresses[0] : each.value.local_ip
+    user        = each.value.ssh_user
+    host        = var.use_tailscale ? data.tailscale_device.node[each.key].addresses[0] : each.value.bootstrap_host
+    port        = each.value.ssh_port
+    private_key = each.value.ssh_auth == "key" ? file(each.value.ssh_key_path != "" ? each.value.ssh_key_path : var.default_ssh_key_path) : null
+    password    = each.value.ssh_auth == "password" ? (each.value.ssh_password != "" ? each.value.ssh_password : var.default_ssh_password) : null
   }
 
   provisioner "remote-exec" {
@@ -53,11 +72,20 @@ resource "null_resource" "k3s_setup" {
   }
 }
 
+resource "null_resource" "k3s_setup_local" {
+  for_each   = local.local_nodes
+  depends_on = [null_resource.mac_hardware_config]
+
+  provisioner "local-exec" {
+    command = each.value.is_master ? "curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up --authkey=${tailscale_tailnet_key.k3s_key.key} --ssh --accept-routes && sleep 5 && curl -sfL https://get.k3s.io | sh -s - server --token=${var.k3s_token} --disable traefik --disable servicelb --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --advertise-address=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}'" : "curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up --authkey=${tailscale_tailnet_key.k3s_key.key} --ssh --accept-routes && sleep 5 && curl -sfL https://get.k3s.io | K3S_URL=https://${var.master_tailscale_ip}:6443 K3S_TOKEN=${var.k3s_token} sh -s - agent --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}'"
+  }
+}
+
 # --- 5. Mac Auto-Restart Setup (Phase 2) ---
 # This runs after we have the master's Tailscale IP
 resource "null_resource" "mac_k3s_autostart" {
   count      = var.use_tailscale ? 1 : 0
-  depends_on = [null_resource.k3s_setup]
+  depends_on = [null_resource.k3s_setup_remote, null_resource.k3s_setup_local]
 
   provisioner "local-exec" {
     command = <<EOT
@@ -104,13 +132,14 @@ PLIST
 
 # --- 6. Automated Kubeconfig Bridge ---
 resource "null_resource" "get_kubeconfig" {
-  depends_on = [null_resource.k3s_setup]
+  depends_on = [null_resource.k3s_setup_remote, null_resource.k3s_setup_local]
   count      = var.use_tailscale ? 1 : 0
 
   provisioner "local-exec" {
     command = <<EOT
-      scp ${var.ssh_user}@${var.master_tailscale_ip}:/etc/rancher/k3s/k3s.yaml ./k3s-config
-      sed -i '' 's/127.0.0.1/${var.master_tailscale_ip}/g' ./k3s-config
+      scp ${var.nodes["pi-brain"].ssh_user}@${var.master_tailscale_ip}:/etc/rancher/k3s/k3s.yaml ./k3s-config
+      sed -i.bak 's/127.0.0.1/${var.master_tailscale_ip}/g' ./k3s-config
+      rm -f ./k3s-config.bak
     EOT
   }
 }

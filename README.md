@@ -12,10 +12,19 @@ This repository automates the creation of a hybrid Kubernetes cluster spanning a
 
 ## How to Run
 
-Before starting, ensure your `.env` file is populated with your Tailscale API keys, Google Cloud credentials, and K3s tokens.
+Before starting:
+- copy `terraform/.env.example` to your own env file
+- set `TAILSCALE_OAUTH_CLIENT_ID` and `TAILSCALE_OAUTH_CLIENT_SECRET`
+- set `TF_VAR_k3s_token`, `TF_VAR_tailnet_name`, and `GOOGLE_APPLICATION_CREDENTIALS`
+
+Node bootstrap access is defined in `terraform/variables.tf`:
+- `pi-brain`: SSH key auth on `raspberrypi.local:2222`
+- `mac-worker`: SSH key auth on `Tim-Schendzielorz.local:22`
+- `ubuntu-worker`: local mode (no SSH)
 
 ### 1. Initialize & Bootstrap (Phase 1)
 Run this from your main machine while all nodes are on your **local home network**. This installs Tailscale and prepares the virtual hardware.
+`use_tailscale` defaults to `true`, so for the first bootstrap run explicitly override it to `false`.
 ```bash
 source .env
 terraform init
@@ -33,7 +42,7 @@ Flip the switch to transition the cluster to its permanent, encrypted Tailscale 
 
 ```bash
 source .env
-terraform apply -var="use_tailscale=true"
+terraform apply
 ```
 
 ### 4. Take Control
