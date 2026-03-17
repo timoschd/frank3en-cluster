@@ -65,9 +65,9 @@ resource "null_resource" "k3s_setup_remote" {
 
       # K3s Install: uses native Tailscale integration and manual hardware reserves
       each.value.is_master ?
-      "curl -sfL https://get.k3s.io | sh -s - server --token=${var.k3s_token} --disable traefik --disable servicelb --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --advertise-address=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}'" :
+      "curl -sfL https://get.k3s.io | sh -s - server --token=${var.k3s_token} --disable traefik --disable servicelb --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --advertise-address=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}' ${join(" ", [for l in each.value.node_labels : "--node-label=${l}"])}" :
 
-      "curl -sfL https://get.k3s.io | K3S_URL=https://${var.master_tailscale_ip}:6443 K3S_TOKEN=${var.k3s_token} sh -s - agent --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}'"
+      "curl -sfL https://get.k3s.io | K3S_URL=https://${var.master_tailscale_ip}:6443 K3S_TOKEN=${var.k3s_token} sh -s - agent --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}' ${join(" ", [for l in each.value.node_labels : "--node-label=${l}"])}"
     ]
   }
 }
@@ -77,7 +77,7 @@ resource "null_resource" "k3s_setup_local" {
   depends_on = [null_resource.mac_hardware_config]
 
   provisioner "local-exec" {
-    command = each.value.is_master ? "curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up --authkey=${tailscale_tailnet_key.k3s_key.key} --ssh --accept-routes && sleep 5 && curl -sfL https://get.k3s.io | sh -s - server --token=${var.k3s_token} --disable traefik --disable servicelb --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --advertise-address=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}'" : "curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up --authkey=${tailscale_tailnet_key.k3s_key.key} --ssh --accept-routes && sleep 5 && curl -sfL https://get.k3s.io | K3S_URL=https://${var.master_tailscale_ip}:6443 K3S_TOKEN=${var.k3s_token} sh -s - agent --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}'"
+    command = each.value.is_master ? "curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up --authkey=${tailscale_tailnet_key.k3s_key.key} --ssh --accept-routes && sleep 5 && curl -sfL https://get.k3s.io | sh -s - server --token=${var.k3s_token} --disable traefik --disable servicelb --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --advertise-address=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}' ${join(" ", [for l in each.value.node_labels : "--node-label=${l}"])}" : "curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up --authkey=${tailscale_tailnet_key.k3s_key.key} --ssh --accept-routes && sleep 5 && curl -sfL https://get.k3s.io | K3S_URL=https://${var.master_tailscale_ip}:6443 K3S_TOKEN=${var.k3s_token} sh -s - agent --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}' ${join(" ", [for l in each.value.node_labels : "--node-label=${l}"])}"
   }
 }
 

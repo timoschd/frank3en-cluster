@@ -12,6 +12,7 @@ variable "nodes" {
     ram_gb         = number
     res_cpu        = string # e.g., "200m"
     res_ram        = string # e.g., "512Mi"
+    node_labels    = list(string)
   }))
   default = {
     "pi-brain" = {
@@ -27,6 +28,7 @@ variable "nodes" {
       ram_gb         = 4
       res_cpu        = "200m"
       res_ram        = "500Mi"
+      node_labels    = ["node-role.kubernetes.io/controller=true", "hardware=pi"]
     },
     "mac-worker" = {
       bootstrap_host = "Tim-Schendzielorz.local"
@@ -41,6 +43,7 @@ variable "nodes" {
       ram_gb         = 6
       res_cpu        = "1500m"
       res_ram        = "2000Mi"
+      node_labels    = ["hardware=mac"]
     },
     "ubuntu-worker" = {
       bootstrap_host = "127.0.0.1"
@@ -55,6 +58,7 @@ variable "nodes" {
       ram_gb         = 4
       res_cpu        = "750m"
       res_ram        = "1200Mi"
+      node_labels    = ["hardware=ubuntu"]
     },
     "windows-worker" = {
       bootstrap_host = "win"
@@ -69,6 +73,7 @@ variable "nodes" {
       ram_gb         = 8
       res_cpu        = "2000m"
       res_ram        = "4000Mi"
+      node_labels    = ["hardware=windows-gpu"]
     }
   }
 }
