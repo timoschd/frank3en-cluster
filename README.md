@@ -13,9 +13,10 @@ This repository automates the creation of a hybrid Kubernetes cluster spanning a
 ## How to Run
 
 Before starting:
-- copy `terraform/.env.example` to your own env file
-- set `TAILSCALE_OAUTH_CLIENT_ID` and `TAILSCALE_OAUTH_CLIENT_SECRET`
-- set `TF_VAR_k3s_token`, `TF_VAR_tailnet_name`, and `GOOGLE_APPLICATION_CREDENTIALS`
+- copy `terraform/.env.example` to your own env file (for credentials only)
+- copy `terraform/terraform.tfvars.example` to `terraform/terraform.tfvars`
+- set `TAILSCALE_OAUTH_CLIENT_ID`, `TAILSCALE_OAUTH_CLIENT_SECRET`, and `GOOGLE_APPLICATION_CREDENTIALS` in your env file
+- set cluster variables in `terraform/terraform.tfvars`
 
 Node bootstrap access is defined in `terraform/variables.tf`:
 - `pi-brain`: SSH key auth on `raspberrypi.local:2222`
@@ -28,21 +29,21 @@ Run this from your main machine while all nodes are on your **local home network
 ```bash
 source .env
 terraform init
-terraform apply -var="use_tailscale=false"
+terraform apply -var-file="terraform.tfvars" -var="use_tailscale=false"
 ```
 
 ### 2. Verify & Capture the "Brain's" IP
 Once the first apply finishes, your nodes will appear in your Tailscale Admin Console.
 
 1. Copy the Tailscale IP of your Raspberry Pi (`pi-brain`).
-2. Update your `.env` file: `export TF_VAR_master_tailscale_ip="100.x.y.z"`.
+2. Update `terraform.tfvars`: `master_tailscale_ip = "100.x.y.z"`.
 
 ### 3. Enable Travel Mode (Phase 2)
 Flip the switch to transition the cluster to its permanent, encrypted Tailscale tunnel.
 
 ```bash
 source .env
-terraform apply
+terraform apply -var-file="terraform.tfvars"
 ```
 
 ### 4. Take Control

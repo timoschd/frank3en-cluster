@@ -35,3 +35,4 @@ dist/
 build/
 *.log
 secrets/
+*.tfvars
