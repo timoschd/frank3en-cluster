@@ -4,11 +4,15 @@ resource "null_resource" "mac_hardware_config" {
 
   provisioner "local-exec" {
     command = <<EOT
-      # Start Colima with explicit specs from variables
-      colima start --cpu ${var.nodes["mac-worker"].cpu} --memory ${var.nodes["mac-worker"].ram_gb} --disk 50 --kubernetes=false
+      if command -v colima >/dev/null 2>&1 && command -v brew >/dev/null 2>&1; then
+        # Start Colima with explicit specs from variables
+        colima start --cpu ${var.nodes["mac-worker"].cpu} --memory ${var.nodes["mac-worker"].ram_gb} --disk 50 --kubernetes=false
 
-      # Ensure Colima restarts on system boot
-      brew services start colima
+        # Ensure Colima restarts on system boot
+        brew services start colima
+      else
+        echo "Skipping mac_hardware_config: colima/brew not available on this host"
+      fi
     EOT
   }
 }
@@ -89,6 +93,7 @@ resource "null_resource" "mac_k3s_autostart" {
 
   provisioner "local-exec" {
     command = <<EOT
+      if command -v launchctl >/dev/null 2>&1; then
       # Create LaunchAgent plist for K3s auto-restart on Mac boot
       cat > ~/Library/LaunchAgents/com.franken.k3s.plist << 'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -126,6 +131,9 @@ PLIST
       launchctl unload ~/Library/LaunchAgents/com.franken.k3s.plist 2>/dev/null || true
       # Load the new plist
       launchctl load ~/Library/LaunchAgents/com.franken.k3s.plist
+      else
+        echo "Skipping mac_k3s_autostart: launchctl not available on this host"
+      fi
     EOT
   }
 }

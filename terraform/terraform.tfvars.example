@@ -1,0 +1,15 @@
+# Copy this file to terraform.tfvars (or another *.tfvars file) and fill in real values.
+# Then run Terraform with: terraform apply -var-file="terraform.tfvars"
+
+# Core cluster settings
+k3s_token               = "a_very_long_random_string_12345"
+tailnet_name            = "your-tailnet.ts.net"
+master_tailscale_ip     = "100.x.y.z"
+
+# Bootstrap SSH defaults
+default_ssh_key_path    = "/home/your-user/.ssh/id_ed25519"
+default_ssh_password    = ""
+
+# Cluster behavior - should be used in command as -var flags
+#exclude_windows_worker  = true
+#use_tailscale           = true

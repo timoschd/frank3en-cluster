@@ -85,7 +85,7 @@ variable "use_tailscale" {
 }
 variable "exclude_windows_worker" {
   type    = bool
-  default = true
+  default = false
 }
 variable "tailnet_name" { type = string }
 variable "master_tailscale_ip" { type = string }
