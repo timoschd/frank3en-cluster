@@ -28,7 +28,7 @@ variable "nodes" {
       ram_gb         = 4
       res_cpu        = "200m"
       res_ram        = "500Mi"
-      node_labels    = ["node-role.kubernetes.io/controller=true", "hardware=pi"]
+      node_labels    = ["frank3en.io/node-role=controller", "hardware=pi"]
     },
     "mac-worker" = {
       bootstrap_host = "Tim-Schendzielorz.local"
