@@ -20,6 +20,7 @@ resource "null_resource" "mac_hardware_config" {
 # --- 2. Tailscale Join Key ---
 resource "tailscale_tailnet_key" "k3s_key" {
   reusable      = true
+  ephemeral     = false
   preauthorized = true
   tags          = ["tag:k3s"]
 }
