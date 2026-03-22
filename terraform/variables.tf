@@ -47,9 +47,9 @@ variable "nodes" {
     },
     "ubuntu-worker" = {
       bootstrap_host = "127.0.0.1"
-      bootstrap_mode = "local"
+      bootstrap_mode = "ssh"
       ssh_port       = 22
-      ssh_user       = ""
+      ssh_user       = "user"
       ssh_auth       = "key"
       ssh_key_path   = ""
       ssh_password   = ""
@@ -88,9 +88,16 @@ variable "exclude_windows_worker" {
   default = false
 }
 variable "tailnet_name" { type = string }
-variable "master_tailscale_ip" { type = string }
+variable "master_tailscale_ip" {
+  type    = string
+  default = ""
+}
 variable "k3s_token" { type = string }
 variable "default_ssh_key_path" { type = string }
+variable "use_ssh_agent" {
+  type    = bool
+  default = true
+}
 variable "default_ssh_password" {
   type      = string
   sensitive = true

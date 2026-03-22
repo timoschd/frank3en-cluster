@@ -30,6 +30,8 @@ locals {
     if !(var.exclude_windows_worker && name == "windows-worker")
   }
 
+  master_join_host = var.use_tailscale ? try(data.tailscale_device.node["pi-brain"].addresses[0], var.master_tailscale_ip) : var.nodes["pi-brain"].bootstrap_host
+
   remote_nodes = {
     for name, node in local.active_nodes : name => node
     if node.bootstrap_mode == "ssh"
@@ -57,7 +59,8 @@ resource "null_resource" "k3s_setup_remote" {
     user        = each.value.ssh_user
     host        = var.use_tailscale ? data.tailscale_device.node[each.key].addresses[0] : each.value.bootstrap_host
     port        = each.value.ssh_port
-    private_key = each.value.ssh_auth == "key" ? file(each.value.ssh_key_path != "" ? each.value.ssh_key_path : var.default_ssh_key_path) : null
+    agent       = each.value.ssh_auth == "key" ? var.use_ssh_agent : false
+    private_key = each.value.ssh_auth == "key" && !var.use_ssh_agent ? file(pathexpand(replace(each.value.ssh_key_path != "" ? each.value.ssh_key_path : var.default_ssh_key_path, "$HOME", "~"))) : null
     password    = each.value.ssh_auth == "password" ? (each.value.ssh_password != "" ? each.value.ssh_password : var.default_ssh_password) : null
   }
 
@@ -71,7 +74,7 @@ resource "null_resource" "k3s_setup_remote" {
       each.value.is_master ?
       "curl -sfL https://get.k3s.io | sh -s - server --token=${var.k3s_token} --disable traefik --disable servicelb --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --advertise-address=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}' ${join(" ", [for l in each.value.node_labels : "--node-label=${l}"])}" :
 
-      "curl -sfL https://get.k3s.io | K3S_URL=https://${var.master_tailscale_ip}:6443 K3S_TOKEN=${var.k3s_token} sh -s - agent --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}' ${join(" ", [for l in each.value.node_labels : "--node-label=${l}"])}"
+      "curl -sfL https://get.k3s.io | K3S_URL=https://${local.master_join_host}:6443 K3S_TOKEN=${var.k3s_token} sh -s - agent --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}' ${join(" ", [for l in each.value.node_labels : "--node-label=${l}"])}"
     ]
   }
 }
@@ -81,7 +84,7 @@ resource "null_resource" "k3s_setup_local" {
   depends_on = [null_resource.mac_hardware_config]
 
   provisioner "local-exec" {
-    command = each.value.is_master ? "curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up --authkey=${tailscale_tailnet_key.k3s_key.key} --ssh --accept-routes && sleep 5 && curl -sfL https://get.k3s.io | sh -s - server --token=${var.k3s_token} --disable traefik --disable servicelb --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --advertise-address=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}' ${join(" ", [for l in each.value.node_labels : "--node-label=${l}"])}" : "curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up --authkey=${tailscale_tailnet_key.k3s_key.key} --ssh --accept-routes && sleep 5 && curl -sfL https://get.k3s.io | K3S_URL=https://${var.master_tailscale_ip}:6443 K3S_TOKEN=${var.k3s_token} sh -s - agent --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}' ${join(" ", [for l in each.value.node_labels : "--node-label=${l}"])}"
+    command = each.value.is_master ? "curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up --authkey=${tailscale_tailnet_key.k3s_key.key} --ssh --accept-routes && sleep 5 && curl -sfL https://get.k3s.io | sh -s - server --token=${var.k3s_token} --disable traefik --disable servicelb --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --advertise-address=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}' ${join(" ", [for l in each.value.node_labels : "--node-label=${l}"])}" : "curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up --authkey=${tailscale_tailnet_key.k3s_key.key} --ssh --accept-routes && sleep 5 && curl -sfL https://get.k3s.io | K3S_URL=https://${local.master_join_host}:6443 K3S_TOKEN=${var.k3s_token} sh -s - agent --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4) --kubelet-arg='system-reserved=cpu=${each.value.res_cpu},memory=${each.value.res_ram}' ${join(" ", [for l in each.value.node_labels : "--node-label=${l}"])}"
   }
 }
 
@@ -111,7 +114,7 @@ sleep 30
 curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up --authkey=${tailscale_tailnet_key.k3s_key.key} --ssh --accept-routes
 sleep 5
-curl -sfL https://get.k3s.io | K3S_URL=https://${var.master_tailscale_ip}:6443 K3S_TOKEN=${var.k3s_token} sh -s - agent --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4)</string>
+curl -sfL https://get.k3s.io | K3S_URL=https://${local.master_join_host}:6443 K3S_TOKEN=${var.k3s_token} sh -s - agent --vpn-auth='name=tailscale,joinKey=${tailscale_tailnet_key.k3s_key.key}' --node-ip=$(tailscale ip -4)</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
@@ -145,8 +148,8 @@ resource "null_resource" "get_kubeconfig" {
 
   provisioner "local-exec" {
     command = <<EOT
-      scp ${var.nodes["pi-brain"].ssh_user}@${var.master_tailscale_ip}:/etc/rancher/k3s/k3s.yaml ./k3s-config
-      sed -i.bak 's/127.0.0.1/${var.master_tailscale_ip}/g' ./k3s-config
+      scp ${var.nodes["pi-brain"].ssh_user}@${local.master_join_host}:/etc/rancher/k3s/k3s.yaml ./k3s-config
+      sed -i.bak 's/127.0.0.1/${local.master_join_host}/g' ./k3s-config
       rm -f ./k3s-config.bak
     EOT
   }
