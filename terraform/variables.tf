@@ -88,6 +88,11 @@ variable "exclude_windows_worker" {
   default = false
 }
 variable "tailnet_name" { type = string }
+variable "tailscale_device_names" {
+  type        = map(string)
+  default     = {}
+  description = "Optional override map of node key -> tailscale device name prefix (without .tailnet suffix)."
+}
 variable "master_tailscale_ip" {
   type    = string
   default = ""
