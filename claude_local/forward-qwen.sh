@@ -14,9 +14,9 @@ echo "Colima SSH port: $COLIMA_PORT"
 # Kill any existing forward on port 8080
 lsof -ti:8080 2>/dev/null | xargs kill -9 2>/dev/null
 
-# Set up SSH tunnel through Colima to Windows worker
+# Set up SSH tunnel through Colima to Windows worker 30082 for gemma4 and 30081 for qwen-9b-llm
 ssh -p "$COLIMA_PORT" \
-    -L 8080:100.75.183.62:30081 \
+    -L 8080:100.75.183.62:30082 \
     -i ~/.colima/_lima/_config/user \
     -o StrictHostKeyChecking=no \
     -o UserKnownHostsFile=/dev/null \
